@@ -17,18 +17,28 @@ let bookService : BookService = new BookService();
                                                               
 export class BookController{
     createBook = (req: Request, res:Response) => {
-        const validation = CreateBookDTO.safeParse(req.body);
+        try{
+            const validation = CreateBookDTO.safeParse(req.body);
         if(!validation.success){
             return res.status(400).json({errors: validation.error});
         }
         const {id, title} = validation.data;  // same as req.body bubt validated
-        
+
         const newBook: Book = bookService.createBook({id, title});
         
         return res.status(201).json(newBook);
 
+        }catch(error: Error | any){
+            return res.status(400).json({message: error.message ?? "Something went wrong"});
+        }
     }
     getBooks = (req: Request, res: Response) => {
-    res.status(200).json(books);
+        let response = bookService.getAllBooks();
+        res.status(200).json(response);
+    }
+    getBookById = (req: Request , res: Response) => {
+        const {bookid} = req.params;
+        let response = bookService.getBookById(bookid);
+        res.status(200).json(response);
     }
 }

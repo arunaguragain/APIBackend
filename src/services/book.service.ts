@@ -1,3 +1,4 @@
+import { response } from "express";
 import { IBookRepository, BookRepository } from "../repositories/book.repository";
 import { Book } from "../types/book.types";
 
@@ -19,5 +20,9 @@ export class BookService{
         }
         //more logic/query/processing can be added here
         return bookRepository.createBook(book);
+    }
+    getBookById = (id: string) => {
+        let response = bookRepository.getOneBook(id) ;
+        return response;
     }
 }
