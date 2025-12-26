@@ -1,6 +1,7 @@
 import express , {Application, Request, Response} from 'express';
 import bodyParser from 'body-parser';
 import bookRoutes from './routes/book.routes';
+import authRoutes from './routes/auth.routes';
 import dotenv from 'dotenv';
 import {PORT} from './config';
 import { connectDatabase } from './database/mongodb';
@@ -13,7 +14,8 @@ const app: Application = express();
 
 app.use(bodyParser.json());
 
-app.use('./api/books', bookRoutes);
+app.use('/api/books', bookRoutes);
+app.use('/api/auth', authRoutes);
 
 async function start() {
     await connectDatabase();
