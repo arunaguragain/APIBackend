@@ -5,6 +5,7 @@ import authRoutes from './routes/auth.routes';
 import dotenv from 'dotenv';
 import {PORT} from './config';
 import { connectDatabase } from './database/mongodb';
+import adminUserRouter from './routes/admin/user.route';
 dotenv.config();
 // Yo bhanda tala .env chalauna milcha 
 console.log(process.env.PORT);
@@ -16,6 +17,7 @@ app.use(bodyParser.json());
 
 app.use('/api/books', bookRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/admin/users', adminUserRouter);
 
 async function start() {
     await connectDatabase();

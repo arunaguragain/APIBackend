@@ -1,7 +1,11 @@
-import { CreateUserDto } from "../dtos/user.dto";
+import { CreateUserDto, LoginUserDto } from "../dtos/user.dto";
 import { UserRepository } from "../repositories/user.repository";
 import bcrypts from "bcryptjs";
 import { HttpError } from "../errors/http-error";
+import jwt from "jsonwebtoken";
+import { JWT_SECRET } from "../config";
+import { email } from "zod";
+
 
 let userRepository = new UserRepository();
 
@@ -22,5 +26,24 @@ export class UserServices{
         const newUser = await userRepository.createUser(data);
 
         return newUser;
+    }
+    async loginUser(data: LoginUserDto){
+        const existingUser = await userRepository.getUserByUsername(data.username);
+        if(!existingUser){
+            throw new HttpError(404, "User not found");
+        }
+        const isPasswordValid = await bcrypts.compare(data.password, existingUser.password); //compare plain text with hashed
+        if(!isPasswordValid){
+            throw new HttpError(401, "Invalid credentials");
+        }
+        //generate JWT
+        const payload = {
+            id: existingUser._id,
+            username: existingUser.username,
+            email: existingUser.email,
+            role: existingUser.role,
+        }; //what to include in token
+        const token = jwt.sign(payload, JWT_SECRET, {expiresIn: '30d'}); //30 day expiry
+        return{token, existingUser}
     }
 }
