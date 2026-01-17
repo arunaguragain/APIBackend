@@ -49,5 +49,4 @@ export class AdminUserService {
         if (!result) throw new HttpError(500, "Failed to delete user");
         return true;
     }
-    // Continue all
 }
