@@ -5,6 +5,7 @@ import { PORT } from './config';
 import { connectDatabase } from './database/mongodb';
 import cors from 'cors';
 
+
 dotenv.config();
 // Yo bhanda tala .env chalauna milcha
 console.log(process.env.PORT); 
@@ -12,6 +13,7 @@ console.log(process.env.PORT);
 import adminUserRouter from './routes/admin/user.route';
 import authRoutes from './routes/auth.routes';
 import bookRoutes from './routes/book.routes';
+import path from 'path';
 const app: Application = express();
 // const PORT: number = 3000;
 
@@ -22,6 +24,10 @@ let corsOptions={
 }
 //origin:"*",//yo le sabai url lai access dincha
 app.use(cors(corsOptions));
+
+app.use('/uploads', express.static(path.join(
+    __dirname, '../uploads'
+))); //static filr serving
 
 app.use(bodyParser.json());
 
