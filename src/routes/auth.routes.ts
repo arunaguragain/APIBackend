@@ -11,7 +11,7 @@ router.post("/login", authController.login);
 router.get("/whoami", authorizedMiddleware, authController.getProfile);
 
 router.put(
-    "/upload-profile",
+    "/update-profile",
     authorizedMiddleware,
     uploads.single("image"),   //"image" - field name from frontend/client
     authController.updateProfile

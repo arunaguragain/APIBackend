@@ -13,6 +13,9 @@ console.log(process.env.PORT);
 import adminUserRouter from './routes/admin/user.route';
 import authRoutes from './routes/auth.routes';
 import bookRoutes from './routes/book.routes';
+import blogRouter from './routes/blog.routes';
+import adminBlogRouter from './routes/admin/blog.route';
+
 import path from 'path';
 const app: Application = express();
 // const PORT: number = 3000;
@@ -34,6 +37,8 @@ app.use(bodyParser.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/books', bookRoutes);
 app.use('/api/admin/users', adminUserRouter);
+app.use('/api/blogs', blogRouter);
+app.use('/api/admin/blogs', adminBlogRouter);
 async function start(){
     await connectDatabase();
         
