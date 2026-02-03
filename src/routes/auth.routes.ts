@@ -17,4 +17,7 @@ router.put(
     authController.updateProfile
 )
 
+router.post("/request-password-reset", 
+    authController.sendResetPasswordEmail);
+    
 export default router;

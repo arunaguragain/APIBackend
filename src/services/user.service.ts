@@ -1,55 +1,55 @@
 import { CreateUserDto, LoginUserDto, UpdateUserDto } from "../dtos/user.dto";
 import { UserRepository } from "../repositories/user.repository";
-import bcrypts from "bcryptjs";
+import bcryptjs from "bcryptjs";
 import { HttpError } from "../errors/http-error";
 import jwt from "jsonwebtoken";
-import { JWT_SECRET } from "../config";
-import { email } from "zod";
+import { JWT_SECRET } from "../config/index";
+import { sendEmail } from "../config/email";
 
-
+const CLIENT_URL = process.env.CLIENT_URL as string;
 let userRepository = new UserRepository();
 
-export class UserServices{
-    async registerUser(data: CreateUserDto){
-        //Business logic, check duplicate username/email, hash
+export class UserService {
+    async registerUser(data: CreateUserDto) {
+        // Business logic, check duplicate username/email, hash
         const checkEmail = await userRepository.getUserByEmail(data.email);
-        if(checkEmail){
+        if (checkEmail) {
             throw new HttpError(403, "Email already in use");
         }
         const checkUsername = await userRepository.getUserByUsername(data.username);
-        if(checkUsername){
+        if (checkUsername) {
             throw new HttpError(403, "Username already in use");
         }
-        // hash/encrypt password, to not store plain text password = security risk
-        const hashedPassword = await bcrypts.hash(data.password, 10); //10 - complexity
-        data.password = hashedPassword; //update the password with hased one
+        // hash/encrypt password, to not store plain text password - security risk
+        const hashedPassword = await bcryptjs.hash(data.password, 10); // 10 - complexity
+        data.password = hashedPassword; // update the password with hashed one
         const newUser = await userRepository.createUser(data);
 
         return newUser;
     }
-    async loginUser(data: LoginUserDto){
+    async loginUser(data: LoginUserDto) {
         const existingUser = await userRepository.getUserByUsername(data.username);
-        if(!existingUser){
+        if (!existingUser) {
             throw new HttpError(404, "User not found");
         }
-        const isPasswordValid = await bcrypts.compare(data.password, existingUser.password); //compare plain text with hashed
-        if(!isPasswordValid){
+        const isPasswordValid = await bcryptjs.compare(data.password, existingUser.password);// compare plain text with hashed
+        if (!isPasswordValid) {
             throw new HttpError(401, "Invalid credentials");
         }
-        //generate JWT
-        const payload = {
+        // generate JWT
+        const payload = { 
             id: existingUser._id,
             username: existingUser.username,
             email: existingUser.email,
-            role: existingUser.role,
-        }; //what to include in token
-        const token = jwt.sign(payload, JWT_SECRET, {expiresIn: '30d'}); //30 day expiry
-        return{token, existingUser}
+            role: existingUser.role
+        }; // what to include in token
+        const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '30d' }); // 30 days expiry
+        return { token, existingUser }
     }
 
-    async getUserById(userId: string){
+    async getUserById(userId: string) {
         const user = await userRepository.getUserById(userId);
-        if(!user){
+        if (!user) {
             throw new HttpError(404, "User not found");
         }
         return user;
@@ -73,10 +73,26 @@ export class UserServices{
             }
         }
         if(data.password){
-            const hashedPassword = await bcrypts.hash(data.password, 10);
+            const hashedPassword = await bcryptjs.hash(data.password, 10);
             data.password = hashedPassword;
         }
         const updatedUser = await userRepository.updateOneUser(userId, data);
         return updatedUser;
+    }
+
+    async sendResetPasswordEmail(email?: string) {
+        if (!email) {
+            throw new HttpError(400, "Email is required");
+        }
+        const user = await userRepository.getUserByEmail(email);
+        if (!user) {
+            throw new HttpError(404, "User not found");
+        }
+        const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '1h' }); // 1 hour expiry
+        const resetLink = `${CLIENT_URL}/reset-password?token=${token}`;
+        const html = `<p>Click <a href="${resetLink}">here</a> to reset your password. This link will expire in 1 hour.</p>`;
+        await sendEmail(user.email, "Password Reset", html);
+        return user;
+
     }
 }
